@@ -10,7 +10,9 @@ $( document ).ready(function() {
                 graph.destroy();
             }
             var dataset = new vis.DataSet(data.items);
-            var options = {};
+            var options = {
+                drawPoints: {style: 'circle'}
+            };
             graph = new vis.Graph2d(container, dataset, options);
         });
     }
