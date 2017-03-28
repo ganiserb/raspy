@@ -14,3 +14,6 @@ class TemperatureMeasurement(Base):
     def __repr__(self):
         return "TemperatureMeasurement(device={}, moment={}, value={})>".format(
             self.device, self.moment, self.value)
+
+    def as_dict(self):
+        return {'x': self.moment.isoformat(), 'y': self.value}

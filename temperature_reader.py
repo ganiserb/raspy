@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import time
+import config
 from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -15,7 +16,7 @@ sensors = [
 ]
 
 # Set up the DB
-engine = create_engine('sqlite:///test.db', echo=True)
+engine = create_engine(config.DB_STRING, echo=True)
 Session = sessionmaker(bind=engine)
 session = Session()
 # Create the tables if they don't exist
@@ -28,6 +29,10 @@ def get_temperature(path):
         reading = device.read()
     data = reading.split('\n')[1].split(" ")[9]
     return float(data[2:]) / 1000
+
+# Discard the first reading
+for sensor in sensors:
+    get_temperature(sensor['path'])
 
 iteration = 0
 while 1:
@@ -45,7 +50,7 @@ while 1:
             # Add to DB session
             session.add(measurement)
 
-    if iteration == 60:
+    if iteration == 10:
         # Save to DB every 60 measurements
         iteration = 0
         session.commit()
