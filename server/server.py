@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import TemperatureMeasurement
 
-app = Flask(__name__, static_url_path='')
+app = Flask(__name__)
 
 # Set up the DB
 engine = create_engine(config.DB_STRING, echo=True)
@@ -16,6 +16,7 @@ session = Session()
 @app.route("/")
 def start():
     return render_template('index.html')
+
 
 @app.route('/get_data')
 def get_data():
@@ -28,7 +29,7 @@ def get_data():
 
 @app.route('/js/<path:path>')
 def send_js(path):
-    return send_from_directory('js', path)
+    return send_from_directory('/home/pi/raspy/server/js/', path)
 
 
 if __name__ == "__main__":
