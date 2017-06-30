@@ -1,6 +1,7 @@
 # coding=utf-8
 import config
-from flask import Flask, render_template, send_from_directory, jsonify
+from flask import Flask, render_template, send_from_directory, jsonify, request
+from datetime import datetime, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import TemperatureMeasurement
@@ -20,9 +21,24 @@ def start():
 
 @app.route('/get_data')
 def get_data():
-    # a = request.args.get('a', 0, type=int)
-    # b = request.args.get('b', 0, type=int)
-    q = session.query(TemperatureMeasurement).all()
+    start = request.args.get('start', None, type=str)
+    end = request.args.get('end', None, type=str)
+    # Last X days
+    days = request.args.get('d', None, type=str)
+
+    if start and end:
+        print(start, end, type(start))
+        q = session.query(TemperatureMeasurement).filter(
+            TemperatureMeasurement.moment.between(start, end)
+        ).all()
+    elif days:
+        days_ago = datetime.now() - timedelta(days=int(days))
+        from_date = str(days_ago.date())
+        q = session.query(TemperatureMeasurement).filter(
+            TemperatureMeasurement.moment >= from_date
+        ).all()
+    else:
+        q = session.query(TemperatureMeasurement).all()
     data = [i.as_dict() for i in q]
     return jsonify(items=data)
     # return "asd"

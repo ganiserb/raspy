@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import time
 import config
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import TemperatureMeasurement, Base
@@ -12,6 +12,7 @@ sensors = [
         'name': 'red',
         'path': '/sys/bus/w1/devices/28-800000282522/w1_slave',
         'last_measurement': None,
+        'last_measurement_moment': None,
     },
 ]
 
@@ -40,18 +41,29 @@ while 1:
     for sensor in sensors:
         temperature = get_temperature(sensor['path'])
 
-        if sensor['last_measurement'] != temperature:
-            sensor['last_measurement'] = temperature  # Update value
+        temperature_changed = sensor['last_measurement'] != temperature
+
+        time_passed = False
+        last_time = sensor['last_measurement_moment']
+        if last_time:
+            time_passed = (last_time + timedelta(minutes=1)) > datetime.now()
+
+        if temperature_changed and time_passed:
             # Only record changes in measurements
+            # after certain time has passed
+
+            sensor['last_measurement'] = temperature  # Update values
+            sensor['last_measurement_moment'] = datetime.now()
+
             measurement = TemperatureMeasurement(
                 device=sensor['name'],
-                moment=datetime.now(),
+                moment=datetime.now(timezone.utc),
                 value=temperature)
             # Add to DB session
             session.add(measurement)
 
     if iteration == 10:
-        # Save to DB every 60 measurements
+        # Save to DB every X measurements
         iteration = 0
         session.commit()
 
